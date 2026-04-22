@@ -1,0 +1,8 @@
+# Virtual Environments (මේවා GitHub යවන්නේ නැත)
+.venv/
+venv/
+env/
+
+# Python Cache files (පරිගණකය විසින් හදන අනවශ්‍ය ෆයිල්ස්)
+__pycache__/
+*.pyc
