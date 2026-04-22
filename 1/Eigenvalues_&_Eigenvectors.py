@@ -1,96 +1,74 @@
 import math
+print("========== PART 1: Eigenvalues & Eigenvectors (2x2) ==========\n")
 
-print("========== PART 1: Eigenvalues & Eigenvectors ==========\n")
-
-# 1. Get 9 values from the user
+# 1. Get 4 values from the user
 print("[ Please enter Symmetric values ]\n")
 a11 = float(input("First Row,  First Column  (a11): "))
 a12 = float(input("First Row,  Second Column (a12): "))
-a13 = float(input("First Row,  Third Column  (a13): "))
-
 a21 = float(input("Second Row, First Column  (a21): "))
 a22 = float(input("Second Row, Second Column (a22): "))
-a23 = float(input("Second Row, Third Column  (a23): "))
 
-a31 = float(input("Third Row,  First Column  (a31): "))
-a32 = float(input("Third Row,  Second Column (a32): "))
-a33 = float(input("Third Row,  Third Column  (a33): "))
-
-A = [[a11, a12, a13],
-     [a21, a22, a23],
-     [a31, a32, a33]]
+A = [[a11, a12],
+     [a21, a22]]
 
 try:
     # ==========================================
-    # 2. FIND EIGENVALUES (Cardano's Formula)
+    # 2. FIND EIGENVALUES (Quadratic Formula)
     # ==========================================
-    # The characteristic polynomial of a 3x3 matrix is:
-    #   -λ³ + T·λ² - S·λ + D = 0
-    # where T = trace, S = sum of 2x2 principal minors, D = determinant
+    # Characteristic equation of a 2x2 Matrix: λ² - Tλ + D = 0
 
-    T = a11 + a22 + a33
-    S = (a11*a22 - a12*a21) + (a11*a33 - a13*a31) + (a22*a33 - a23*a32)
-    D = a11*(a22*a33 - a23*a32) - a12*(a21*a33 - a23*a31) + a13*(a21*a32 - a22*a31)
+    T = a11 + a22                  # Trace (sum of diagonal elements)
+    D = (a11 * a22) - (a12 * a21)  # Determinant
 
-    # Rewrite as depressed cubic using substitution λ = t - a2/3
-    a2, a1, a0 = -T, S, -D
-    Q = (3 * a1 - a2**2) / 9.0
-    R = (9 * a2 * a1 - 27 * a0 - 2 * (a2**3)) / 54.0
+    # Discriminant part: b² - 4ac
+    discriminant = T**2 - 4 * D
 
-    # Clamp Q to avoid sqrt of positive number (symmetric matrices always have real eigenvalues)
-    if Q >= 0:
-        Q = -1e-8
+    # For positive definite (Symmetric) matrices, discriminant cannot be negative.
+    # Small check to avoid floating point errors:
+    if discriminant < 0:
+        discriminant = 0
 
-    # Three real roots via trigonometric method
-    theta = math.acos(max(min(R / math.sqrt(-(Q**3)), 1.0), -1.0))
-
-    lambda1 = 2 * math.sqrt(-Q) * math.cos(theta / 3.0) - a2 / 3.0
-    lambda2 = 2 * math.sqrt(-Q) * math.cos((theta + 2 * math.pi) / 3.0) - a2 / 3.0
-    lambda3 = 2 * math.sqrt(-Q) * math.cos((theta + 4 * math.pi) / 3.0) - a2 / 3.0
-
-    eigenvalues = [lambda1, lambda2, lambda3]
+    # Find the 2 roots using the quadratic formula
+    lambda1 = (T + math.sqrt(discriminant)) / 2.0
+    lambda2 = (T - math.sqrt(discriminant)) / 2.0
+    eigenvalues = [lambda1, lambda2]
 
     print("\n✅ Eigenvalues:")
     print([round(l, 3) for l in eigenvalues])
 
     # ==========================================
-    # 3. FIND EIGENVECTORS (Cross Product Method)
+    # 3. FIND EIGENVECTORS (Orthogonal Vector Method)
     # ==========================================
-    # For each eigenvalue λ, build (A - λI).
-    # Any two rows of (A - λI) span the null space plane.
-    # Their cross product gives the eigenvector direction.
-    # Cross product: row1 × row2 = (r1y*r2z - r1z*r2y,
-    #                                r1z*r2x - r1x*r2z,
-    #                                r1x*r2y - r1y*r2x)
-
     print("\n✅ Eigenvectors:")
     for lam in eigenvalues:
-        # Build (A - λI): subtract λ only from diagonal entries
-        M = [[A[i][j] - (lam if i == j else 0) for j in range(3)] for i in range(3)]
+        # Build the (A - λI) matrix
+        M = [[A[i][j] - (lam if i == j else 0) for j in range(2)] for i in range(2)]
 
-        r0, r1, r2 = M[0], M[1], M[2]
+        r0 = M[0]  # First row of (A - λI)
+        r1 = M[1]  # Second row of (A - λI)
 
-        # Cross product of Row 0 and Row 1
-        vx = r0[1]*r1[2] - r0[2]*r1[1]
-        vy = r0[2]*r1[0] - r0[0]*r1[2]
-        vz = r0[0]*r1[1] - r0[1]*r1[0]
+        # In 2D, the perpendicular (orthogonal) vector to [a, b] is [-b, a].
+        # Use the first row to find the eigenvector:
+        vx = -r0[1]
+        vy =  r0[0]
 
-        mag = math.sqrt(vx**2 + vy**2 + vz**2)
+        mag = math.sqrt(vx**2 + vy**2)
 
-        # If rows are parallel (zero cross product), try Row 0 and Row 2
+        # If the first row is all zeros, fall back to the second row
         if mag < 0.0001:
-            vx = r0[1]*r2[2] - r0[2]*r2[1]
-            vy = r0[2]*r2[0] - r0[0]*r2[2]
-            vz = r0[0]*r2[1] - r0[1]*r2[0]
-            mag = math.sqrt(vx**2 + vy**2 + vz**2)
+            vx = -r1[1]
+            vy =  r1[0]
+            mag = math.sqrt(vx**2 + vy**2)
 
-        # Normalize to unit vector
+        # Normalize to get a unit vector
         if mag > 0:
-            eig_vec = [vx/mag, vy/mag, vz/mag]
+            eig_vec = [vx / mag, vy / mag]
         else:
-            eig_vec = [0.0, 0.0, 0.0]
+            # Default vector for edge cases like the identity matrix
+            eig_vec = [1.0, 0.0]
 
         print(f"  For Eigenvalue {round(lam, 3):>8} -> {[round(v, 3) for v in eig_vec]}")
 
 except Exception as e:
     print("\n❌ Error: Calculation failed. Please ensure you entered symmetric values.")
+    print(f"   Detail: {e}")
